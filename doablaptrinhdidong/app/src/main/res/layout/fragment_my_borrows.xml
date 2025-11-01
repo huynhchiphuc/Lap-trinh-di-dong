@@ -16,6 +16,17 @@
         android:textColor="@android:color/white"
         android:gravity="center"/>
 
+    <EditText
+        android:id="@+id/etSearchBorrow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Tìm kiếm theo tên sách hoặc trạng thái..."
+        android:padding="12dp"
+        android:layout_margin="8dp"
+        android:background="@android:drawable/edit_text"
+        android:drawableStart="@android:drawable/ic_menu_search"
+        android:drawablePadding="8dp"/>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"

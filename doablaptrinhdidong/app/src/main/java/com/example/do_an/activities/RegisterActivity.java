@@ -121,8 +121,8 @@ public class RegisterActivity extends AppCompatActivity {
                             FirebaseUser firebaseUser = mAuth.getCurrentUser();
                             if (firebaseUser != null) {
                                 String uid = firebaseUser.getUid();
-                                // Admin tự động approved, Student chờ duyệt
-                                String status = role.equals("admin") ? "approved" : "pending";
+                                // TẤT CẢ tài khoản đều phải chờ duyệt
+                                String status = "pending";
                                 User user = new User(uid, name, email, role, status);
 
                                 // Save user info to Firestore
@@ -132,8 +132,10 @@ public class RegisterActivity extends AppCompatActivity {
                                             @Override
                                             public void onSuccess(Void unused) {
                                                 progressBar.setVisibility(View.GONE);
+                                                // Đăng xuất ngay sau khi đăng ký để bắt buộc phải chờ duyệt
+                                                mAuth.signOut();
                                                 String message = role.equals("admin")
-                                                    ? "Đăng ký thành công!"
+                                                    ? "Đăng ký tài khoản Quản lý thành công! Vui lòng chờ Super Admin duyệt tài khoản."
                                                     : "Đăng ký thành công! Vui lòng chờ admin duyệt tài khoản.";
                                                 Toast.makeText(RegisterActivity.this, message, Toast.LENGTH_LONG).show();
                                                 finish();

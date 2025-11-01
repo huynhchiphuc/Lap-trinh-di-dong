@@ -72,8 +72,7 @@ public class LoginActivity extends AppCompatActivity {
         tvForgotPassword.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // TODO: Implement forgot password
-                Toast.makeText(LoginActivity.this, "Tính năng đang phát triển", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(LoginActivity.this, ForgotPasswordActivity.class));
             }
         });
     }
@@ -128,18 +127,20 @@ public class LoginActivity extends AppCompatActivity {
                             if ("pending".equals(status)) {
                                 // Tài khoản chờ duyệt
                                 mAuth.signOut();
-                                Toast.makeText(LoginActivity.this,
-                                    "Tài khoản của bạn đang chờ admin duyệt. Vui lòng thử lại sau!",
-                                    Toast.LENGTH_LONG).show();
+                                String message = "admin".equals(role)
+                                    ? "Tài khoản Quản lý của bạn đang chờ Super Admin duyệt. Vui lòng thử lại sau!"
+                                    : "Tài khoản của bạn đang chờ admin duyệt. Vui lòng thử lại sau!";
+                                Toast.makeText(LoginActivity.this, message, Toast.LENGTH_LONG).show();
                                 return;
                             }
 
                             if ("rejected".equals(status)) {
                                 // Tài khoản bị từ chối
                                 mAuth.signOut();
-                                Toast.makeText(LoginActivity.this,
-                                    "Tài khoản của bạn đã bị từ chối. Vui lòng liên hệ admin!",
-                                    Toast.LENGTH_LONG).show();
+                                String message = "admin".equals(role)
+                                    ? "Tài khoản Quản lý của bạn đã bị từ chối. Vui lòng liên hệ Super Admin!"
+                                    : "Tài khoản của bạn đã bị từ chối. Vui lòng liên hệ admin!";
+                                Toast.makeText(LoginActivity.this, message, Toast.LENGTH_LONG).show();
                                 return;
                             }
 

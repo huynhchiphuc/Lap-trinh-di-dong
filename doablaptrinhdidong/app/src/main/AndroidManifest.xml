@@ -30,6 +30,12 @@
             android:name=".activities.RegisterActivity"
             android:exported="false"/>
 
+        <!-- Forgot Password Activity -->
+        <activity
+            android:name=".activities.ForgotPasswordActivity"
+            android:exported="false"
+            android:parentActivityName=".activities.LoginActivity"/>
+
         <!-- Student Main Activity -->
         <activity
             android:name=".activities.StudentMainActivity"

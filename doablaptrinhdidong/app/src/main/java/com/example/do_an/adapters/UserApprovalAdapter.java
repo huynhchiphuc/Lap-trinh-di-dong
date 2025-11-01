@@ -45,7 +45,17 @@ public class UserApprovalAdapter extends RecyclerView.Adapter<UserApprovalAdapte
 
         holder.tvName.setText(user.getName());
         holder.tvEmail.setText(user.getEmail());
-        holder.tvRole.setText(user.isAdmin() ? "Quản trị viên" : "Sinh viên");
+
+        // Hiển thị vai trò với màu sắc phân biệt
+        if (user.isAdmin()) {
+            holder.tvRole.setText("⚠️ QUẢN TRỊ VIÊN");
+            holder.tvRole.setTextColor(context.getResources().getColor(android.R.color.holo_red_dark));
+            holder.tvRole.setTextSize(16);
+        } else {
+            holder.tvRole.setText("Sinh viên");
+            holder.tvRole.setTextColor(context.getResources().getColor(android.R.color.holo_blue_dark));
+            holder.tvRole.setTextSize(14);
+        }
 
         holder.btnApprove.setOnClickListener(v -> showApproveDialog(user));
         holder.btnReject.setOnClickListener(v -> showRejectDialog(user));
@@ -57,18 +67,27 @@ public class UserApprovalAdapter extends RecyclerView.Adapter<UserApprovalAdapte
     }
 
     private void showApproveDialog(User user) {
+        String title = user.isAdmin() ? "Duyệt tài khoản QUẢN TRỊ VIÊN" : "Duyệt tài khoản";
+        String message = user.isAdmin()
+            ? "⚠️ CẢNH BÁO: Bạn đang duyệt tài khoản QUẢN TRỊ VIÊN cho " + user.getName() +
+              ".\n\nNgười này sẽ có toàn quyền quản lý hệ thống!\n\nBạn có chắc chắn muốn duyệt không?"
+            : "Bạn có muốn duyệt tài khoản của " + user.getName() + " không?";
+
         new AlertDialog.Builder(context)
-                .setTitle("Duyệt tài khoản")
-                .setMessage("Bạn có muốn duyệt tài khoản của " + user.getName() + " không?")
+                .setTitle(title)
+                .setMessage(message)
                 .setPositiveButton("Duyệt", (dialog, which) -> approveUser(user))
                 .setNegativeButton("Hủy", null)
                 .show();
     }
 
     private void showRejectDialog(User user) {
+        String title = user.isAdmin() ? "Từ chối tài khoản QUẢN TRỊ VIÊN" : "Từ chối tài khoản";
+        String message = "Bạn có muốn từ chối tài khoản của " + user.getName() + " không?";
+
         new AlertDialog.Builder(context)
-                .setTitle("Từ chối tài khoản")
-                .setMessage("Bạn có muốn từ chối tài khoản của " + user.getName() + " không?")
+                .setTitle(title)
+                .setMessage(message)
                 .setPositiveButton("Từ chối", (dialog, which) -> rejectUser(user))
                 .setNegativeButton("Hủy", null)
                 .show();

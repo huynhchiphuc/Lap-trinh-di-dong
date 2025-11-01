@@ -1,9 +1,12 @@
 package com.example.do_an.fragments;
 
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -25,7 +28,9 @@ public class BookListFragment extends Fragment {
     private RecyclerView recyclerView;
     private BookAdapter adapter;
     private List<Book> bookList;
+    private List<Book> filteredBookList;
     private FirebaseFirestore db;
+    private EditText etSearchBook;
 
     @Nullable
     @Override
@@ -34,16 +39,56 @@ public class BookListFragment extends Fragment {
 
         db = FirebaseFirestore.getInstance();
         bookList = new ArrayList<>();
+        filteredBookList = new ArrayList<>();
 
         recyclerView = view.findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        adapter = new BookAdapter(getContext(), bookList);
+        etSearchBook = view.findViewById(R.id.etSearchBook);
+
+        adapter = new BookAdapter(getContext(), filteredBookList);
         recyclerView.setAdapter(adapter);
 
+        setupSearchListener();
         loadBooks();
 
         return view;
+    }
+
+    private void setupSearchListener() {
+        etSearchBook.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                filterBooks(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
+        });
+    }
+
+    private void filterBooks(String query) {
+        filteredBookList.clear();
+
+        if (query.isEmpty()) {
+            filteredBookList.addAll(bookList);
+        } else {
+            String lowerCaseQuery = query.toLowerCase().trim();
+            for (Book book : bookList) {
+                if (book.getTitle().toLowerCase().contains(lowerCaseQuery) ||
+                    book.getAuthor().toLowerCase().contains(lowerCaseQuery) ||
+                    book.getCategory().toLowerCase().contains(lowerCaseQuery)) {
+                    filteredBookList.add(book);
+                }
+            }
+        }
+
+        adapter.notifyDataSetChanged();
     }
 
     private void loadBooks() {
@@ -59,7 +104,7 @@ public class BookListFragment extends Fragment {
                         }
                         bookList.add(book);
                     }
-                    adapter.notifyDataSetChanged();
+                    filterBooks(etSearchBook.getText().toString());
                 })
                 .addOnFailureListener(e -> {
                     android.widget.Toast.makeText(getContext(), "Lỗi tải danh sách sách: " + e.getMessage(), android.widget.Toast.LENGTH_SHORT).show();
