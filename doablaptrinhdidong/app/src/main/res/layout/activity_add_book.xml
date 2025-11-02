@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  activity_add_book.xml
+  Màn hình thêm sách mới cho ứng dụng.
+  Ghi chú ở dưới mỗi phần để giải thích vai trò của view và các id quan trọng.
+  Viết bằng tiếng Việt để bạn dễ hiểu.
+-->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -6,13 +12,20 @@
     android:fillViewport="true"
     android:background="@android:color/white">
 
+    <!--
+        Container chính: LinearLayout theo chiều dọc chứa toàn bộ nội dung form.
+        Padding 24dp để nội dung không sát mép màn hình.
+    -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="24dp">
 
-        <!-- Header -->
+        <!--
+            Header: Tiêu đề màn hình "THÊM SÁCH MỚI".
+            Đây chỉ là TextView hiển thị tĩnh.
+        -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -24,7 +37,12 @@
             android:layout_marginBottom="24dp"
             android:layout_gravity="center"/>
 
-        <!-- Title -->
+        <!--
+            Title field (Tên sách)
+            - Sử dụng TextInputLayout + TextInputEditText để có style outlined.
+            - id: edtTitle -> dùng trong Activity/Fragment để lấy giá trị tên sách.
+            - inputType="text" phù hợp cho chuỗi văn bản.
+        -->
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -39,7 +57,10 @@
                 android:inputType="text"/>
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Author -->
+        <!--
+            Author field (Tác giả)
+            - id: edtAuthor
+        -->
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -54,7 +75,10 @@
                 android:inputType="text"/>
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Category -->
+        <!--
+            Category field (Thể loại)
+            - id: edtCategory
+        -->
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -69,7 +93,12 @@
                 android:inputType="text"/>
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Quantity -->
+        <!--
+            Quantity field (Số lượng)
+            - id: edtQuantity
+            - inputType="number" để người dùng chỉ nhập số.
+            - Activity nên kiểm tra số lượng > 0 trước khi lưu.
+        -->
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -84,7 +113,12 @@
                 android:inputType="number"/>
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Image URL -->
+        <!--
+            Image URL field (Link ảnh bìa)
+            - id: edtImageUrl
+            - Tùy chọn: nếu để trống, Activity có thể dùng ảnh mặc định.
+            - inputType="textUri" để hỗ trợ dán URL.
+        -->
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -99,7 +133,11 @@
                 android:inputType="textUri"/>
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Description -->
+        <!--
+            Description field (Mô tả sách)
+            - id: edtDescription
+            - inputType="textMultiLine" và lines="4" để nhập mô tả dài.
+        -->
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -116,7 +154,12 @@
                 android:gravity="top"/>
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Progress Bar -->
+        <!--
+            ProgressBar hiển thị khi đang lưu / upload dữ liệu.
+            - id: progressBar
+            - ban đầu ẩn (visibility="gone").
+            - Activity nên setVisibility(View.VISIBLE) khi bắt đầu rồi ẩn lại khi xong.
+        -->
         <ProgressBar
             android:id="@+id/progressBar"
             android:layout_width="wrap_content"
@@ -124,7 +167,12 @@
             android:layout_gravity="center"
             android:visibility="gone"/>
 
-        <!-- Buttons -->
+        <!--
+            Buttons: HỦY và LƯU
+            - btnCancel: hủy/thoát màn hình (finish() hoặc clear form).
+            - btnSave: validate dữ liệu rồi lưu vào Firestore/Database.
+            - Chiều cao 60dp để dễ bấm trên thiết bị di động.
+        -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -155,4 +203,3 @@
 
     </LinearLayout>
 </ScrollView>
-

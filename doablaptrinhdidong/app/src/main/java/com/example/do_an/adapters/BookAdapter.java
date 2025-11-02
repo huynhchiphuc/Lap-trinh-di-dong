@@ -25,13 +25,27 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * BookAdapter: Adapter để hiển thị danh sách sách trong RecyclerView
+ * Chức năng:
+ * 1. Hiển thị thông tin sách (ảnh, tên, tác giả, thể loại, số lượng)
+ * 2. Xử lý sự kiện mượn sách
+ * 3. Hiển thị chi tiết sách khi click
+ * 4. Tạo yêu cầu mượn và lưu vào Firestore
+ */
 public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder> {
 
-    private Context context;
-    private List<Book> bookList;
-    private FirebaseFirestore db;
-    private FirebaseAuth mAuth;
+    // ============ Khai báo biến ============
+    private Context context;                // Context của Activity/Fragment
+    private List<Book> bookList;            // Danh sách sách
+    private FirebaseFirestore db;           // Firestore Database
+    private FirebaseAuth mAuth;             // Firebase Authentication
 
+    /**
+     * Constructor: Khởi tạo BookAdapter
+     * @param context Context từ Activity
+     * @param bookList Danh sách sách cần hiển thị
+     */
     public BookAdapter(Context context, List<Book> bookList) {
         this.context = context;
         this.bookList = bookList;
@@ -39,63 +53,101 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
         this.mAuth = FirebaseAuth.getInstance();
     }
 
+    /**
+     * onCreateViewHolder: Tạo ViewHolder cho mỗi item
+     * @param parent ViewGroup chứa items
+     * @param viewType Loại view
+     * @return BookViewHolder mới
+     */
     @NonNull
     @Override
     public BookViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        // ========== Inflate layout item_book ==========
         View view = LayoutInflater.from(context).inflate(R.layout.item_book, parent, false);
         return new BookViewHolder(view);
     }
 
+    /**
+     * onBindViewHolder: Gắn dữ liệu sách vào ViewHolder
+     * @param holder ViewHolder cần gắn dữ liệu
+     * @param position Vị trí item trong danh sách
+     */
     @Override
     public void onBindViewHolder(@NonNull BookViewHolder holder, int position) {
+        // ========== Lấy sách tại vị trí hiện tại ==========
         Book book = bookList.get(position);
 
-        holder.tvTitle.setText(book.getTitle());
-        holder.tvAuthor.setText("Tác giả: " + book.getAuthor());
-        holder.tvCategory.setText("Thể loại: " + book.getCategory());
-        holder.tvQuantity.setText("Còn lại: " + book.getQuantity());
+        // ========== Gắn dữ liệu vào các TextView ==========
+        holder.tvTitle.setText(book.getTitle());                           // Tên sách
+        holder.tvAuthor.setText("Tác giả: " + book.getAuthor());          // Tác giả
+        holder.tvCategory.setText("Thể loại: " + book.getCategory());     // Thể loại
+        holder.tvQuantity.setText("Còn lại: " + book.getQuantity());      // Số lượng còn
 
-        // Load image với Glide
+        // ========== Load ảnh bìa sách bằng Glide ==========
         Glide.with(context)
                 .load(book.getImageUrl())
-                .placeholder(R.drawable.ic_launcher_foreground)
+                .placeholder(R.drawable.ic_launcher_foreground)  // Ảnh placeholder khi đang tải
                 .into(holder.imgBook);
 
+        // ========== Thiết lập listener cho nút Mượn ==========
         holder.btnBorrow.setOnClickListener(v -> {
+            // Kiểm tra xem còn sách không
             if (book.getQuantity() > 0) {
+                // Có sách - hiển thị dialog xác nhận
                 showBorrowConfirmDialog(book);
             } else {
+                // Hết sách - hiển thị thông báo
                 Toast.makeText(context, "Sách đã hết!", Toast.LENGTH_SHORT).show();
             }
         });
 
+        // ========== Thiết lập listener cho click item để xem chi tiết ==========
         holder.itemView.setOnClickListener(v -> {
+            // Hiển thị dialog chi tiết sách
             showBookDetailsDialog(book);
         });
     }
 
+    /**
+     * getItemCount: Trả về số lượng item
+     * @return Kích thước danh sách sách
+     */
     @Override
     public int getItemCount() {
         return bookList.size();
     }
 
+    /**
+     * showBorrowConfirmDialog: Hiển thị dialog xác nhận mượn sách
+     * @param book Sách cần mượn
+     */
     private void showBorrowConfirmDialog(Book book) {
         new AlertDialog.Builder(context)
                 .setTitle("Xác nhận mượn sách")
                 .setMessage("Bạn có muốn mượn sách \"" + book.getTitle() + "\" không?")
-                .setPositiveButton("Mượn", (dialog, which) -> borrowBook(book))
-                .setNegativeButton("Hủy", null)
+                .setPositiveButton("Mượn", (dialog, which) -> borrowBook(book))  // Nút xác nhận
+                .setNegativeButton("Hủy", null)  // Nút hủy
                 .show();
     }
 
+    /**
+     * borrowBook: Xử lý yêu cầu mượn sách
+     * Bước 1: Kiểm tra người dùng đã login
+     * Bước 2: Validate thông tin sách
+     * Bước 3: Lấy thông tin người dùng
+     * Bước 4: Tạo record mượn với trạng thái "Chờ duyệt"
+     * Bước 5: Lưu vào Firestore
+     *
+     * @param book Sách cần mượn
+     */
     private void borrowBook(Book book) {
-        // Kiểm tra user đã đăng nhập chưa
+        // ========== Kiểm tra người dùng đã login ==========
         if (mAuth.getCurrentUser() == null) {
             Toast.makeText(context, "Vui lòng đăng nhập lại!", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Kiểm tra book có đầy đủ thông tin không
+        // ========== Validate thông tin sách ==========
         if (book == null || book.getId() == null || book.getId().isEmpty()) {
             Toast.makeText(context, "Lỗi: Thông tin sách không hợp lệ!", Toast.LENGTH_SHORT).show();
             return;
@@ -106,38 +158,43 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
             return;
         }
 
+        // ========== Lấy ID người dùng ==========
         String userId = mAuth.getCurrentUser().getUid();
 
-        // Lấy thông tin user
+        // ========== Lấy thông tin người dùng từ Firestore ==========
         db.collection("users").document(userId).get()
                 .addOnSuccessListener(documentSnapshot -> {
+                    // ===== Lấy tên người dùng =====
                     String userName = null;
                     if (documentSnapshot != null && documentSnapshot.exists()) {
                         userName = documentSnapshot.getString("name");
                     }
+                    // Nếu không tìm thấy tên, dùng tên mặc định
                     if (userName == null || userName.isEmpty()) {
-                        userName = "Người dùng"; // fallback
+                        userName = "Người dùng";
                     }
 
-                    // Tạo borrow record
+                    // ===== Tạo ID mượn =====
                     String borrowId = null;
                     try {
                         borrowId = db.collection("borrows").document().getId();
                     } catch (Exception ex) {
-                        // Trong trường hợp hiếm hoi thư viện trả về null hoặc lỗi, fallback bằng UUID
                         borrowId = null;
                     }
 
+                    // ===== Nếu ID null, tạo ID từ UUID =====
                     if (borrowId == null || borrowId.isEmpty()) {
                         borrowId = "B_" + UUID.randomUUID().toString();
                     }
 
+                    // ===== Tạo ngày mượn và ngày hết hạn =====
                     Calendar calendar = Calendar.getInstance();
-                    Timestamp borrowDate = Timestamp.now();
+                    Timestamp borrowDate = Timestamp.now();  // Ngày mượn = hôm nay
 
-                    calendar.add(Calendar.DAY_OF_MONTH, 14); // 14 ngày mượn
-                    Timestamp dueDate = new Timestamp(calendar.getTime());
+                    calendar.add(Calendar.DAY_OF_MONTH, 14);  // Cộng thêm 14 ngày
+                    Timestamp dueDate = new Timestamp(calendar.getTime());  // Ngày hết hạn
 
+                    // ===== Tạo đối tượng Borrow =====
                     Borrow borrow = new Borrow(
                             borrowId,
                             userId,
@@ -146,22 +203,21 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
                             book.getTitle(),
                             borrowDate,
                             dueDate,
-                            null,
-                            "Chờ duyệt" // Trạng thái chờ admin duyệt
+                            null,  // Chưa trả => null
+                            "Chờ duyệt"  // Trạng thái chờ admin duyệt
                     );
 
-                    // Lưu borrow record
+                    // ===== Lưu yêu cầu mượn vào Firestore =====
                     try {
                         db.collection("borrows").document(borrowId).set(borrow)
                                 .addOnSuccessListener(aVoid -> {
-                                    // KHÔNG giảm quantity ngay, đợi admin duyệt
+                                    // KHÔNG giảm số lượng sách ngay, đợi admin duyệt
                                     Toast.makeText(context, "Đã gửi yêu cầu mượn sách! Vui lòng chờ admin duyệt.", Toast.LENGTH_LONG).show();
                                 })
                                 .addOnFailureListener(e -> {
                                     Toast.makeText(context, "Lỗi mượn sách: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                                 });
                     } catch (IllegalArgumentException iae) {
-                        // document(...) nhận null hoặc chuỗi rỗng
                         Toast.makeText(context, "Lỗi nội bộ: không thể tạo yêu cầu mượn (ID không hợp lệ).", Toast.LENGTH_LONG).show();
                     } catch (Exception e) {
                         Toast.makeText(context, "Lỗi mượn sách: " + e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -172,9 +228,13 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
                 });
     }
 
+    /**
+     * showBookDetailsDialog: Hiển thị dialog chi tiết thông tin sách
+     * @param book Sách cần hiển thị chi tiết
+     */
     private void showBookDetailsDialog(Book book) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle(book.getTitle());
+        builder.setTitle(book.getTitle());  // Tiêu đề = tên sách
         builder.setMessage(
                 "Tác giả: " + book.getAuthor() + "\n\n" +
                 "Thể loại: " + book.getCategory() + "\n\n" +
@@ -185,13 +245,25 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
         builder.show();
     }
 
+    /**
+     * BookViewHolder: Inner class để giữ reference các view trong item
+     */
     static class BookViewHolder extends RecyclerView.ViewHolder {
-        ImageView imgBook;
-        TextView tvTitle, tvAuthor, tvCategory, tvQuantity;
-        Button btnBorrow;
+        // ============ Khai báo các view trong item_book.xml ============
+        ImageView imgBook;           // Ảnh bìa sách
+        TextView tvTitle;            // Tên sách
+        TextView tvAuthor;           // Tác giả
+        TextView tvCategory;         // Thể loại
+        TextView tvQuantity;         // Số lượng còn
+        Button btnBorrow;            // Nút mượn sách
 
+        /**
+         * Constructor: Khởi tạo BookViewHolder
+         * @param itemView View của item
+         */
         public BookViewHolder(@NonNull View itemView) {
             super(itemView);
+            // ========== Ràng buộc các view ==========
             imgBook = itemView.findViewById(R.id.imgBook);
             tvTitle = itemView.findViewById(R.id.tvTitle);
             tvAuthor = itemView.findViewById(R.id.tvAuthor);
