@@ -158,12 +158,19 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
             return;
         }
 
-        // ========== Lấy ID người dùng ==========
-        String userId = mAuth.getCurrentUser().getUid();
+
+        final String userId = mAuth.getCurrentUser().getUid();
+
+        if (userId == null || userId.isEmpty()) {
+            Toast.makeText(context, "Lỗi: Không xác định được người dùng!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
 
         // ========== Lấy thông tin người dùng từ Firestore ==========
         db.collection("users").document(userId).get()
                 .addOnSuccessListener(documentSnapshot -> {
+
                     // ===== Lấy tên người dùng =====
                     String userName = null;
                     if (documentSnapshot != null && documentSnapshot.exists()) {
@@ -172,20 +179,29 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
                     // Nếu không tìm thấy tên, dùng tên mặc định
                     if (userName == null || userName.isEmpty()) {
                         userName = "Người dùng";
-                    }
 
-                    // ===== Tạo ID mượn =====
-                    String borrowId = null;
+                    final String finalUserName = userName; // Make effectively final for lambda
+
+
+                    // Tạo borrow record với ID an toàn
+                    String borrowId;
+
                     try {
                         borrowId = db.collection("borrows").document().getId();
+                        if (borrowId == null || borrowId.isEmpty()) {
+                            borrowId = "B_" + UUID.randomUUID().toString();
+                        }
                     } catch (Exception ex) {
+
                         borrowId = null;
                     }
 
                     // ===== Nếu ID null, tạo ID từ UUID =====
                     if (borrowId == null || borrowId.isEmpty()) {
+
                         borrowId = "B_" + UUID.randomUUID().toString();
                     }
+                    final String finalBorrowId = borrowId; // Make effectively final
 
                     // ===== Tạo ngày mượn và ngày hết hạn =====
                     Calendar calendar = Calendar.getInstance();
@@ -196,9 +212,9 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
 
                     // ===== Tạo đối tượng Borrow =====
                     Borrow borrow = new Borrow(
-                            borrowId,
+                            finalBorrowId,
                             userId,
-                            userName,
+                            finalUserName,
                             book.getId(),
                             book.getTitle(),
                             borrowDate,
@@ -209,18 +225,23 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
 
                     // ===== Lưu yêu cầu mượn vào Firestore =====
                     try {
-                        db.collection("borrows").document(borrowId).set(borrow)
+                        db.collection("borrows").document(finalBorrowId).set(borrow)
                                 .addOnSuccessListener(aVoid -> {
+
                                     // KHÔNG giảm số lượng sách ngay, đợi admin duyệt
                                     Toast.makeText(context, "Đã gửi yêu cầu mượn sách! Vui lòng chờ admin duyệt.", Toast.LENGTH_LONG).show();
+
                                 })
                                 .addOnFailureListener(e -> {
-                                    Toast.makeText(context, "Lỗi mượn sách: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(context, "❌ Lỗi mượn sách: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                                 });
                     } catch (IllegalArgumentException iae) {
-                        Toast.makeText(context, "Lỗi nội bộ: không thể tạo yêu cầu mượn (ID không hợp lệ).", Toast.LENGTH_LONG).show();
+
+                        // document(...) nhận null hoặc chuỗi rỗng
+                        Toast.makeText(context, "❌ Lỗi nội bộ: không thể tạo yêu cầu mượn (ID không hợp lệ).", Toast.LENGTH_LONG).show();
+
                     } catch (Exception e) {
-                        Toast.makeText(context, "Lỗi mượn sách: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context, "❌ Lỗi mượn sách: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 })
                 .addOnFailureListener(e -> {

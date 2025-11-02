@@ -18,6 +18,11 @@
 - ✅ **[CRUD Sách](./CRUD_SUMMARY.md)** - Thêm/Sửa/Xóa sách
 - ✅ **[Hệ thống Duyệt](./APPROVAL_SUMMARY.md)** - Duyệt user & mượn sách
 
+**🆕 CẬP NHẬT MỚI NHẤT (01/11/2025):**
+- ✅ **Fixed Crash** - Mượn sách không còn crash nữa
+- ✅ **Quên Mật Khẩu** - Hoạt động không cần Cloud Functions (miễn phí)
+- 📖 Chi tiết: **[FIXED_CRASH_AND_FORGOT_PASSWORD.md](./FIXED_CRASH_AND_FORGOT_PASSWORD.md)**
+
 ---
 
 ## 🎯 Mục tiêu đề tài

@@ -1,8 +1,9 @@
 package com.example.do_an.activities;
 
+import android.app.AlertDialog;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -17,12 +18,6 @@ import com.example.do_an.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.functions.FirebaseFunctions;
-import com.google.firebase.functions.HttpsCallableResult;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
 
 /**
  * ForgotPasswordActivity: Màn hình đặt lại mật khẩu (Quên mật khẩu)
@@ -35,6 +30,7 @@ import java.util.Random;
  * 6. Có tính năng gửi lại mã với countdown 60 giây
  */
 public class ForgotPasswordActivity extends AppCompatActivity {
+
 
     // ============ Khai báo các UI views cho bước 1 (Nhập email) ============
     private EditText edtEmail;                      // Trường nhập email
@@ -71,15 +67,18 @@ public class ForgotPasswordActivity extends AppCompatActivity {
      * - Ràng buộc các UI views
      * - Thiết lập listeners cho các nút
      */
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_forgot_password);
 
+
         // ========== Khởi tạo Firebase Instances ==========
         mAuth = FirebaseAuth.getInstance();           // Khởi tạo Firebase Auth
         db = FirebaseFirestore.getInstance();         // Khởi tạo Firestore DB
         functions = FirebaseFunctions.getInstance();  // Khởi tạo Firebase Cloud Functions
+
 
         // ========== Ràng buộc UI Views từ Layout ==========
         edtEmail = findViewById(R.id.edtEmail);
@@ -97,8 +96,6 @@ public class ForgotPasswordActivity extends AppCompatActivity {
 
         // ========== Thiết lập Listeners cho các nút ==========
         btnSendCode.setOnClickListener(v -> sendVerificationCode());
-        btnResetPassword.setOnClickListener(v -> resetPassword());
-        btnResendCode.setOnClickListener(v -> resendVerificationCode());
         tvBackToLogin.setOnClickListener(v -> finish());
     }
 
@@ -115,37 +112,52 @@ public class ForgotPasswordActivity extends AppCompatActivity {
         // ========== Lấy email từ EditText ==========
         userEmail = edtEmail.getText().toString().trim();
 
-        // ========== Kiểm tra Email không trống ==========
+
+        Log.d("ForgotPassword", "========== START FORGOT PASSWORD ==========");
+        Log.d("ForgotPassword", "Email entered: " + userEmail);
+
         if (TextUtils.isEmpty(userEmail)) {
+            Log.e("ForgotPassword", "Error: Email is empty!");
             edtEmail.setError("Vui lòng nhập email");
             return;
         }
 
         // ========== Kiểm tra Email có định dạng hợp lệ ==========
         if (!android.util.Patterns.EMAIL_ADDRESS.matcher(userEmail).matches()) {
+            Log.e("ForgotPassword", "Error: Email format invalid: " + userEmail);
             edtEmail.setError("Email không hợp lệ");
             return;
         }
 
-        // ========== Hiển thị ProgressBar và disable nút ==========
+
+        Log.d("ForgotPassword", "✓ Email validation passed");
+
         progressBar.setVisibility(View.VISIBLE);
         btnSendCode.setEnabled(false);
 
-        // ========== Kiểm tra Email tồn tại trong Firestore ==========
+        Log.d("ForgotPassword", "Checking email in Firestore...");
+        // Kiểm tra xem email có tồn tại trong hệ thống không
+
         db.collection("users")
                 .whereEqualTo("email", userEmail)  // Tìm tài khoản với email này
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
+                    Log.d("ForgotPassword", "✓ Firestore query success");
+                    Log.d("ForgotPassword", "Documents found: " + queryDocumentSnapshots.size());
+
                     if (queryDocumentSnapshots.isEmpty()) {
-                        // Email không tồn tại
+
+                        Log.e("ForgotPassword", "Error: Email not found in Firestore!");
+
                         progressBar.setVisibility(View.GONE);
                         btnSendCode.setEnabled(true);
-                        Toast.makeText(this, "Email không tồn tại trong hệ thống", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "❌ Email không tồn tại trong hệ thống", Toast.LENGTH_LONG).show();
                         return;
                     }
 
                     // ========== Lấy userId từ Firestore ==========
                     DocumentSnapshot document = queryDocumentSnapshots.getDocuments().get(0);
+
                     userId = document.getId(); // Lấy document ID (chính là UID)
 
                     // ========== Tạo mã xác thực 6 số ngẫu nhiên ==========
@@ -534,5 +546,6 @@ public class ForgotPasswordActivity extends AppCompatActivity {
             resendTimer.cancel(); // Hủy countdown timer
         }
     }
+
 }
 

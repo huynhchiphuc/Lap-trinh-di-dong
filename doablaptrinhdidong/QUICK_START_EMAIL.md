@@ -135,8 +135,8 @@ npm install nodemailer
 ### Bước 6: Lưu Gmail credentials vào Firebase (30 giây)
 
 ```bash
-firebase functions:config:set gmail.email="your-email@gmail.com"
-firebase functions:config:set gmail.password="abcd efgh ijkl mnop"
+firebase functions:config:set gmail.email="huynhchiphuchcp@gmail.com"
+firebase functions:config:set gmail.password="ahns ircy shef pyng"
 ```
 
 **Thay:**
